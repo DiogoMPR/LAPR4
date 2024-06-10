@@ -1,0 +1,175 @@
+@startuml
+autonumber
+
+actor CustomerManager
+
+participant VerificationRequirementsUI <<presentation>>
+
+participant VerificationRequirementsController <<controller>>
+
+participant SelectJobOpeningController <<controller>>
+participant ListJobOpeningApplicationsController <<controller>>
+participant ChangeJobInterviewStatusController <<controller>>
+participant ListJobOpeningController <<controller>>
+
+
+participant RequirementsPlugin <<core>>
+
+
+participant JobOpeningService <<service>>
+participant ApplicationService <<service>>
+
+database JobOpeningRepository <<repository>>
+database ApplicationRepository <<repository>>
+
+activate CustomerManager
+
+         CustomerManager -> VerificationRequirementsUI : asks  to verify candidate requirements for a job opening
+            activate VerificationRequirementsUI
+        
+                VerificationRequirementsUI -> VerificationRequirementsController : selectJobOpening()
+                activate VerificationRequirementsController
+        
+                    VerificationRequirementsController -> SelectJobOpeningController : selectJobOpening()
+                    activate SelectJobOpeningController
+        
+                        SelectJobOpeningController -> ListJobOpeningController : showJobOpenings()
+                        activate ListJobOpeningController
+        
+                            ListJobOpeningController -> JobOpeningService : allJobOpenings()
+                            activate JobOpeningService
+        
+                                JobOpeningService -> JobOpeningRepository : findAll()
+                                activate JobOpeningRepository
+        
+                                    JobOpeningRepository --> JobOpeningService : Iterable<JobOpening> jobOpenings
+                                deactivate JobOpeningRepository
+        
+                                JobOpeningService --> ListJobOpeningController : Iterable<JobOpening> jobOpenings
+                            deactivate JobOpeningService
+        
+                            ListJobOpeningController --> SelectJobOpeningController : Iterable<JobOpening> jobOpenings
+                        deactivate ListJobOpeningController
+        
+                        SelectJobOpeningController -> SelectJobOpeningController : selectorPart(List<JobOpening> list)
+
+                            SelectJobOpeningController -> ListJobOpeningController : findJobOpeningByJobReference(jobReference)
+                            activate ListJobOpeningController
+        
+                                ListJobOpeningController -> JobOpeningService : findJobOpening(jobReference)
+                                activate JobOpeningService
+        
+                                    JobOpeningService -> JobOpeningRepository : findAll()
+                                    activate JobOpeningRepository
+        
+                                        JobOpeningRepository --> JobOpeningService : Iterable<JobOpening> jobOpenings
+                                    deactivate JobOpeningRepository
+        
+                                    JobOpeningService --> ListJobOpeningController : job opening
+                                deactivate JobOpeningService
+        
+                                ListJobOpeningController --> SelectJobOpeningController : job opening
+                            deactivate ListJobOpeningController
+
+                        SelectJobOpeningController --> VerificationRequirementsController : job opening
+                    deactivate SelectJobOpeningController
+        
+                    VerificationRequirementsController --> VerificationRequirementsUI : job opening
+                deactivate VerificationRequirementsController
+        
+                VerificationRequirementsUI -> CustomerManager : shows all job openings and ask to select one
+            deactivate VerificationRequirementsUI
+CustomerManager -> VerificationRequirementsUI : selects job opening
+
+    activate VerificationRequirementsUI
+
+        VerificationRequirementsUI -> VerificationRequirementsController : allApplicationsOfJobOpeningReceived(jobOpening.jobReference())
+
+        activate VerificationRequirementsController
+
+        VerificationRequirementsController -> ListJobOpeningApplicationsController : allApplicationsOfJobOpeningReceived(jobOpening.jobReference())
+
+        activate ListJobOpeningApplicationsController
+
+            ListJobOpeningApplicationsController -> ApplicationService : allApplications()
+            activate ApplicationService
+
+                ApplicationService -> ApplicationRepository : allApplications()
+                activate ApplicationRepository
+
+                    ApplicationRepository --> ApplicationService : Iterable<Application> allApplicationsReceived
+                deactivate ApplicationRepository
+
+
+            ApplicationService --> ListJobOpeningApplicationsController : Iterable<Application> allApplicationsReceived
+
+                deactivate ApplicationService
+
+            ListJobOpeningApplicationsController --> VerificationRequirementsController : Iterable<Application> applicationListReceived
+
+        deactivate ListJobOpeningApplicationsController
+
+        VerificationRequirementsController --> VerificationRequirementsUI : Iterable<Application> applicationListReceived
+
+        deactivate VerificationRequirementsController
+
+loop for each application
+
+        VerificationRequirementsUI -> VerificationRequirementsController : mapCandidate(candidateRequirements.candidateRequirements())
+
+        activate VerificationRequirementsController
+
+        VerificationRequirementsController --> VerificationRequirementsUI : map of Candidate
+
+        deactivate VerificationRequirementsController
+
+        VerificationRequirementsUI -> VerificationRequirementsController : pluginRequirements(path, clientRequirements)
+
+        activate VerificationRequirementsController
+
+        VerificationRequirementsController -> RequirementsPlugin : checkRequirements(path, clientRequirements)
+
+        activate RequirementsPlugin
+
+        RequirementsPlugin --> VerificationRequirementsController : result(accepted or declined)
+
+        deactivate RequirementsPlugin
+
+        VerificationRequirementsController --> VerificationRequirementsUI : result(accepted or declined)
+
+        deactivate VerificationRequirementsController
+
+        VerificationRequirementsUI -> VerificationRequirementsController : changeJobInterviewStatus(statusFinal, applicationToVerify);
+
+        activate VerificationRequirementsController
+
+        VerificationRequirementsController -> ChangeJobInterviewStatusController: verificationRequirementsController.changeJobInterviewStatus(statusFinal, applicationToVerify);
+
+        deactivate VerificationRequirementsController
+        activate ChangeJobInterviewStatusController
+
+        ChangeJobInterviewStatusController -> ApplicationService : updateStatus(applicationStatus, application);
+        deactivate ChangeJobInterviewStatusController
+        activate ApplicationService
+
+        ApplicationService -> ApplicationRepository: save(application)
+
+        deactivate ApplicationService
+
+end
+
+
+        deactivate VerificationRequirementsController
+
+        VerificationRequirementsUI --> CustomerManager : display list of result of all applications of the selected job opening
+
+
+
+
+
+
+deactivate CustomerManager
+
+@enduml
+
+

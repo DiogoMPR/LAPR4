@@ -1,0 +1,139 @@
+@startuml
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+    FontColor Black
+    FontSize 14
+}
+
+Title "Class Diagram - Upload Requirements Answers of a Candidate "
+
+package "presentation" {
+    class UploadRequirementsAnswersUI {
+        + doShow()
+        + headline()
+    }
+}
+
+package "application" {
+    class UploadRequirementsAnswersController {
+        + retrieveResponseRequirements(path)
+        + uploadRequirements(requirements, application)
+        + findAllJobOpeningsWithJobRequirements()
+        + showApplicationsOfJobOpening(jobReference)
+        + selectApplication()
+        + selectJobOpening(requirements)
+    }
+    class GenerateRequirementsAnswersTemplateController {
+        + findAllJobOpeningsWithJobRequirements()
+        + processLines(lines)
+        + writeListToFile(questionForFile, filePath)
+        + readFile(filePath)
+    }
+    class ListJobOpeningApplicationsController {
+        + allApplicationsOfJobOpening(jobReference)
+        + showApplicationsOfJobOpening(jobReference)
+        + selectApplication()
+        + findJobOpening(jobReference)
+        + findApplicationByID(id)
+        + uploadCandidateRequirements(application, candidateRequirements)
+    }
+    class SelectJobOpeningController {
+        + selectJobOpening()
+        + selectorPart(list)
+        + selectJobOpeningAnalysis()
+    }
+}
+
+package "repositories" {
+    interface JobOpeningRepository {
+        + allJobOpenings()
+    }
+
+    interface ApplicationRepository {
+        + allApplications()
+        + ofIdentity(Integer id)
+    }
+}
+
+package "domain" {
+    class Application {
+        + Application(rank, createdOn, applicationFiles, jobReference,
+            candidate, operator)
+        + Application()
+        + sameAs(other)
+        + equals(other)
+        + hashCode()
+        + compareTo(other)
+        + identity()
+        + rank()
+        + submissionDate()
+        + status()
+        + dataFile()
+        + operator()
+        + candidate()
+        + jobReference()
+        + candidateRequirements()
+        + updateRank(rank)
+        + changeStatus(status)
+        + toString()
+        + uploadCandidateRequirements(candidateRequirements)
+    }
+
+    class CandidateRequirements {
+        + CandidateRequirements(candidateRequirements)
+        + CandidateRequirements()
+        + equals(other)
+        + hashCode()
+        + toString()
+        + candidateRequirements()
+    }
+}
+
+package "services" {
+    class JobOpeningService {
+        + registerJobOpening(jobReference, description, vacanciesNumber, address,
+            mode, contractType, titleOrFunction, company)
+        + findJobOpening(jobReference)
+        + updateJobRequirements(jobReference, jobRequirementsSpecification)
+        + verifyJobReference(jobReference)
+        + allJobOpenings()
+    }
+
+    class ApplicationService {
+        + registerApplication(rank, applicationFiles, jobReference, candidate, operator)
+        + findApplicationById(applicationID)
+        + allApplications()
+        + findApplicationsForJobOpening(jobOpening)
+        + updateRank(rank, application)
+        + applicationsByCM(cm)
+    }
+
+    class CandidateRequirementsService {
+        + registerCandidateRequirements(requirements)
+    }
+}
+
+
+
+UploadRequirementsAnswersUI ---> UploadRequirementsAnswersController
+
+UploadRequirementsAnswersController ---> GenerateRequirementsAnswersTemplateController
+UploadRequirementsAnswersController ---> ListJobOpeningApplicationsController
+UploadRequirementsAnswersController ---> SelectJobOpeningController
+UploadRequirementsAnswersController ---> CandidateRequirementsService
+UploadRequirementsAnswersController ---> ApplicationService
+UploadRequirementsAnswersController ---> ApplicationRepository
+
+GenerateRequirementsAnswersTemplateController ---> JobOpeningService
+
+JobOpeningService ---> JobOpeningRepository
+
+ListJobOpeningApplicationsController ---> ApplicationService
+
+ApplicationService ---> ApplicationRepository
+ApplicationService ---> Application
+
+CandidateRequirementsService ---> CandidateRequirements
+@enduml

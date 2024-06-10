@@ -1,0 +1,140 @@
+@startuml
+autonumber
+
+actor CustomerManager
+
+participant ChangeProcessStatusUI <<presentation>>
+participant ChangeProcessStatusController <<controller>>
+participant SelectJobOpeningController <<controller>>
+participant ListJobOpeningController <<controller>>
+participant JobOpeningService <<service>>
+database JobOpeningRepository <<repository>>
+participant ChangeProcessStateController <<controller>>
+participant ProcessService <<service>>
+participant Process <<process>>
+database ProcessRepository <<repository>>
+
+
+activate CustomerManager
+
+    CustomerManager -> ChangeProcessStatusUI : asks to change phase \nstatus of a job opening
+    activate ChangeProcessStatusUI
+
+        ChangeProcessStatusUI -> ChangeProcessStatusController : selectJobOpening()
+        activate ChangeProcessStatusController
+
+            ChangeProcessStatusController -> SelectJobOpeningController : selectJobOpening()
+            activate SelectJobOpeningController
+
+                SelectJobOpeningController -> ListJobOpeningController : showJobOpenings()
+                activate ListJobOpeningController
+
+                    ListJobOpeningController -> JobOpeningService : allJobOpenings()
+                    activate JobOpeningService
+
+                        JobOpeningService -> JobOpeningRepository : findAll()
+                        activate JobOpeningRepository
+
+                            JobOpeningRepository --> JobOpeningService : Iterable<JobOpening> jobOpenings
+                        deactivate JobOpeningRepository
+
+                        JobOpeningService --> ListJobOpeningController : Iterable<JobOpening> jobOpenings
+                    deactivate JobOpeningService
+
+                    ListJobOpeningController --> SelectJobOpeningController : Iterable<JobOpening> jobOpenings
+                deactivate ListJobOpeningController
+
+                SelectJobOpeningController -> SelectJobOpeningController : selectorPart(List<JobOpening> list)
+                activate SelectJobOpeningController
+
+                    SelectJobOpeningController -> ListJobOpeningController : findJobOpeningByJobReference(jobReference)
+                    activate ListJobOpeningController
+
+                        ListJobOpeningController -> JobOpeningService : findJobOpening(jobReference)
+                        activate JobOpeningService
+
+                            JobOpeningService -> JobOpeningRepository : findAll()
+                            activate JobOpeningRepository
+
+                                JobOpeningRepository --> JobOpeningService : Iterable<JobOpening> jobOpenings
+                            deactivate JobOpeningRepository
+
+                            JobOpeningService --> ListJobOpeningController : job opening
+                        deactivate JobOpeningService
+
+                        ListJobOpeningController --> SelectJobOpeningController : job opening
+                    deactivate ListJobOpeningController
+                deactivate SelectJobOpeningController
+
+                SelectJobOpeningController --> ChangeProcessStatusController : job opening
+            deactivate SelectJobOpeningController
+
+            ChangeProcessStatusController --> ChangeProcessStatusUI : job opening
+        deactivate ChangeProcessStatusController
+
+        ChangeProcessStatusUI -> CustomerManager : shows job opening status \nand asks if it wants to change
+    deactivate ChangeProcessStatusUI
+
+    CustomerManager -> ChangeProcessStatusUI : selects if it wants to go back or forward
+    activate ChangeProcessStatusUI
+
+        ChangeProcessStatusUI -> ChangeProcessStatusController : changeProcessStatus(processStatus,process);
+        activate ChangeProcessStatusController
+
+            ChangeProcessStatusController -> ProcessService : changeProcessStatus(processStatus)
+            activate ProcessService
+
+                ProcessService -> Process : changeProcessStatus(processStatus)
+                activate Process
+
+                    Process --> ProcessService : true
+                deactivate Process
+
+                ProcessService --> ChangeProcessStatusController : true
+            deactivate ProcessService
+
+            ChangeProcessStatusController -> ProcessRepository : save(process)
+            activate ProcessRepository
+
+                ProcessRepository --> ChangeProcessStatusController : true
+            deactivate ProcessRepository
+
+            ChangeProcessStatusController --> ChangeProcessStatusUI : process status altered
+        deactivate ChangeProcessStatusController
+
+        ChangeProcessStatusUI -> ChangeProcessStatusController : changeProcessState(processState,process)
+        activate ChangeProcessStatusController
+
+            ChangeProcessStatusController -> ChangeProcessStateController : changeProcessState(processState,process)
+            activate ChangeProcessStateController
+
+                ChangeProcessStateController -> ProcessService : changeProcessState(processState)
+                activate ProcessService
+
+                    ProcessService -> Process : changeProcessState(processState)
+                    activate Process
+
+                        Process --> ProcessService : true
+                    deactivate Process
+
+                    ProcessService --> ChangeProcessStateController : true
+                deactivate ProcessService
+
+                ChangeProcessStateController -> ProcessRepository : save(process)
+                activate ProcessRepository
+
+                    ProcessRepository --> ChangeProcessStateController : true
+                deactivate ProcessRepository
+
+                ChangeProcessStateController --> ChangeProcessStatusController : process state altered
+            deactivate ChangeProcessStateController
+
+            ChangeProcessStatusController --> ChangeProcessStatusUI : process state altered
+        deactivate ChangeProcessStatusController
+
+    ChangeProcessStatusUI --> CustomerManager : operation success message
+    deactivate ChangeProcessStatusUI
+
+deactivate CustomerManager
+
+@enduml

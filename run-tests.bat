@@ -1,0 +1,3 @@
+ECHO OFF
+ECHO Running tests...
+mvn test

@@ -1,0 +1,3 @@
+# Requirements:
+-> Academic Degree: Master
+-> Programming Languages: Python, Java, JavaScript, TypeScript

@@ -1,0 +1,47 @@
+@startuml
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+    FontColor Black
+    FontSize 14
+}
+
+Title "Class Diagram - List Candidate's Applications"
+
+package "presentation" {
+    class ListCandidateApplicationsUI {
+        + doShow()
+        + headline()
+    }
+}
+
+package "application" {
+    class ListCandidateApplicationsController {
+        + sendApplicationsRequest(email)
+    }
+}
+
+
+package "services" {
+    class CandidateApplicationsService {
+        + requestApplications(email)
+    }
+}
+
+package "protocol" {
+    class Jobs4UProtocol {
+        + sendApplications(email)
+    }
+}
+
+ListCandidateApplicationsUI --> ListCandidateApplicationsController
+
+ListCandidateApplicationsController --> CandidateApplicationsService
+
+CandidateApplicationsService --> Jobs4UProtocol
+
+
+
+
+@enduml

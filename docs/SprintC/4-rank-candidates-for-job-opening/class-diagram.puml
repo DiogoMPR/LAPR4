@@ -1,0 +1,152 @@
+@startuml
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+    FontColor Black
+    FontSize 14
+}
+
+Title "Class Diagram - Register a candidate"
+
+package "presentation" {
+    class RankCandidatesUI {
+        + doShow()
+        + headline()
+        + selectJobOpening()
+        + selectApplication(selectedJobOpening)
+        + getLastJobInterview(selectedApplication)
+        + updateRank(rank, selectedApplication)
+    }
+}
+
+package "application" {
+    class ListJobOpeningController {
+        + showJobOpenings()
+        + allJobOpening()
+        + findJobOpeningByJobReference(jobReference)
+    }
+
+    class SelectJobOpeningController {
+        + selectJobOpening()
+        + selectJobOpeningAnalysis()
+        + selectorPart(list)
+    }
+
+    class RankCandidatesController {
+        + getAllJobOpenings()
+        + getApplicationsForJobOpening(jobOpening)
+        + getInterviewsForApplication(application)
+        + updateRank(rank, application)
+    }
+}
+
+package "services" {
+    class ApplicationService {
+        + registerApplication(rank, applicationFiles, jobReference, candidate, operator)
+        + findApplicationById(applicationID)
+        + allApplications()
+        + findApplicationsForJobOpening(jobOpening)
+        + updateRank(rank, application)
+    }
+
+    class JobOpeningService {
+        + registerJobOpening(jobReference, description, vacanciesNumber, address, mode, contractType, titleOrFunction, company)
+        + findJobOpening(jobReference)
+        + updateJobRequirements(jobReference, jobRequirementsSpecification)
+        + verifyJobReference(jobReference)
+        + allJobOpenings()
+    }
+
+    class JobInterviewService {
+        + registerJobInterview(createdOn, time, score, result, application)
+        + allJobInterviews()
+        + updateInterviewModel(interviewModelToChange, id)
+        + updateInterviewScore(newScore, interviewID)
+        + findInterviewsForApplication(application)
+    }
+}
+
+package "repositories" {
+    interface ApplicationRepository {
+        + allApplications()
+        + ofIdentity(applicationId)
+    }
+
+    interface JobOpeningRepository {
+        + allJobOpenings()
+        + ofIdentity(jobReference)
+    }
+
+    interface JobInterviewRepository {
+        + allInterviews()
+    }
+}
+
+package "domain" {
+    class Application {
+        + Application(rank, createdOn, applicationFiles, jobReference, candidate, operator)
+        + sameAs(otherApplication)
+        + equals(otherApplication)
+        + hashCode()
+        + compareTo(otherApplication)
+        + identity()
+        + rank()
+        + submissionDate()
+        + status()
+        + dataFile()
+        + operator()
+        + candidate()
+        + jobReference()
+        + updateRank(rank)
+        + toString()
+    }
+
+    class JobOpening {
+        + JobOpening(jobReference, description, vacanciesNumber, address, mode, contractType, titleOrFunction, Company)
+        + identity()
+        + sameAs(otherJobOpening)
+        + jobReference()
+        + description()
+        + vacanciesNumber()
+        + address()
+        + mode()
+        + contractType()
+        + titleOrFunction()
+        + company()
+    }
+
+    class JobInterview {
+        + JobInterview(createdOn, time, score, result, application, interviewModel)
+        + identity()
+        + createdOn()
+        + time()
+        + score()
+        + result()
+        + application()
+        + interviewModel()
+        + changeInterviewModel(interviewModelToChange)
+        + hashCode()
+        + sameAs(otherObject)
+        + equals(jobInterview)
+    }
+}
+
+RankCandidatesUI --> RankCandidatesController
+RankCandidatesUI --> SelectJobOpeningController
+
+SelectJobOpeningController -> ListJobOpeningController
+
+RankCandidatesController --> ApplicationService
+RankCandidatesController --> JobOpeningService
+RankCandidatesController --> JobInterviewService
+
+ApplicationService --> ApplicationRepository
+JobOpeningService --> JobOpeningRepository
+JobInterviewService --> JobInterviewRepository
+
+ApplicationRepository --> Application : stores
+JobOpeningRepository --> JobOpening : stores
+JobInterviewRepository --> JobInterview : stores
+
+@enduml

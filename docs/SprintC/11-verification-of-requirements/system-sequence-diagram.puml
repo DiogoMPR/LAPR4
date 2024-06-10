@@ -1,0 +1,40 @@
+@startuml
+skinparam monochrome true
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+title System Sequence Diagram (SSD)
+
+autonumber
+
+actor "Customer Manager" as CM
+participant ":System" as System
+
+activate CM
+
+    CM -> System : asks to verify requirements of a job opening
+    activate System
+
+        System --> CM : shows the list of job opening
+    deactivate System
+
+    CM -> System : selects a job opening
+    activate System
+
+loop for each application of the selected job opening
+
+    CM -> System : selects an application
+
+    System --> CM : verify the requirements
+end loop
+
+    System --> CM : show the result(accepted or declined) of all applications
+
+    deactivate System
+
+
+
+
+
+
+@enduml

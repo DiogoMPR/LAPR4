@@ -1,0 +1,58 @@
+@startuml
+autonumber
+
+
+actor Administrator
+
+participant ListBackofficeUsersUI <<presentation>>
+participant ListUsersController <<application>>
+participant AuthorizationService <<service>>
+participant UserManagementService <<service>>
+database UserRepository <<repository>>
+
+
+activate Administrator
+
+    Administrator -> ListBackofficeUsersUI: list backoffice users
+
+        activate ListBackofficeUsersUI
+
+    ListBackofficeUsersUI -> ListUsersController: elements()
+
+        activate ListUsersController
+
+    ListUsersController -> AuthorizationService: ensureAuthenticatedUserHasAnyOf(roles)
+
+        activate AuthorizationService
+
+    AuthorizationService --> ListUsersController: return true
+
+        deactivate AuthorizationService
+
+    ListUsersController -> UserManagementService: allUsers()
+
+        activate UserManagementService
+
+    UserManagementService -> UserRepository: findAll()
+
+        activate UserRepository
+
+    UserRepository --> UserManagementService: listSystemUsers
+
+        deactivate UserRepository
+
+    UserManagementService --> ListUsersController: listBackofficeUsers
+
+        deactivate UserManagementService
+
+    ListUsersController --> ListBackofficeUsersUI: listBackofficeUsers
+
+        deactivate ListUsersController
+
+    ListBackofficeUsersUI --> Administrator : shows operation's success
+
+        deactivate ListBackofficeUsersUI
+
+        deactivate Administrator
+
+@enduml

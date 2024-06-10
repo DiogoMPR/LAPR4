@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>lapr4</groupId>
+        <artifactId>jobs4u</artifactId>
+        <version>0.1.0</version>
+    </parent>
+
+    <groupId>lapr4.jobs4u</groupId>
+    <artifactId>jobs4u.util.ci</artifactId>
+    <packaging>pom</packaging>
+
+    <name>jobs4u.util.ci</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <code.coverage.project.folder>${basedir}/../</code.coverage.project.folder>
+        <code.coverage.overall.data.folder>${basedir}/target/</code.coverage.overall.data.folder>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <version>0.1.0</version>
+            <groupId>lapr4</groupId>
+            <artifactId>jobs4u.backoffice.app</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>bootstrap</groupId>
+            <artifactId>jobs4u.bootstrap</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>bootstrappers</groupId>
+            <artifactId>jobs4u.bootstrappers</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <version>0.1.0</version>
+            <groupId>lapr4</groupId>
+            <artifactId>jobs4u.candidate.app</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>console</groupId>
+            <artifactId>jobs4u.console</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>core</groupId>
+            <artifactId>jobs4u.core</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <version>0.1.0</version>
+            <groupId>lapr4</groupId>
+            <artifactId>jobs4u.customer.app</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>followUp</groupId>
+            <artifactId>jobs4u.follow.up.server</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>infrastructure</groupId>
+            <artifactId>jobs4u.infrastructure</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>plugin</groupId>
+            <artifactId>jobs4u.plugin</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>persistence</groupId>
+            <artifactId>jobs4u.persistence</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.19.1</version>
+                <configuration>
+                    <argLine>${argLine} -Xms256m -Xmx2048m</argLine>
+                    <forkCount>1</forkCount>
+                    <runOrder>random</runOrder>
+                </configuration>
+            </plugin>
+
+            <!-- Aggregate all reports -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>report-aggregate</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report-aggregate</goal>
+                        </goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>plugin/interviewModule/autogen/**/*.class</exclude>
+                                <exclude>plugin/requirements/autogen/**/*.class</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>

@@ -1,0 +1,111 @@
+@startuml
+autonumber
+
+actor CustomerManager
+
+participant NotifyCandidatesUI <<presentation>>
+participant NotifyCandidatesController <<controller>>
+
+participant ApplicationService <<service>>
+participant EmailService <<service>>
+
+database ApplicationRepository <<repository>>
+
+participant Jobs4UProtocol <<protocol>>
+
+activate CustomerManager
+
+    CustomerManager -> NotifyCandidatesUI : asks to rank candidates
+    activate NotifyCandidatesUI
+
+        NotifyCandidatesUI -> NotifyCandidatesController : findApplicationsToNotify()
+        activate NotifyCandidatesController
+
+            NotifyCandidatesController -> ApplicationService : allApplications()
+            activate ApplicationService
+
+                ApplicationService -> ApplicationRepository : findAll()
+                activate ApplicationRepository
+
+                    ApplicationRepository --> ApplicationService : applications
+                deactivate ApplicationRepository
+
+                ApplicationService --> NotifyCandidatesController : applications
+            deactivate ApplicationService
+
+            NotifyCandidatesController --> NotifyCandidatesUI : applications
+        deactivate NotifyCandidatesController
+
+        NotifyCandidatesUI --> CustomerManager : shows how many emails will be sent
+
+loop for each email
+
+        NotifyCandidatesUI -> NotifyCandidatesController : findCandidateEmail(application)
+        activate NotifyCandidatesController
+
+                NotifyCandidatesController --> NotifyCandidatesUI : candidateEmail
+        deactivate NotifyCandidatesController
+
+        NotifyCandidatesUI -> NotifyCandidatesController : checkApplicationStatus(application)
+        activate NotifyCandidatesController
+
+            NotifyCandidatesController --> NotifyCandidatesUI : applicationStatus
+        deactivate NotifyCandidatesController
+
+        NotifyCandidatesUI -> NotifyCandidatesController : createEmail(candidateEmail, subject, body)
+        activate NotifyCandidatesController
+
+            NotifyCandidatesController -> EmailService : createEmail(candidateEmail, subject, body)
+            activate EmailService
+
+                EmailService --> NotifyCandidatesController : email
+            deactivate EmailService
+
+            NotifyCandidatesController --> NotifyCandidatesUI : email
+        deactivate NotifyCandidatesController
+
+end loop
+
+        NotifyCandidatesUI -> NotifyCandidatesController : sendEmails(emailsToSend)
+        activate NotifyCandidatesController
+
+            NotifyCandidatesController -> EmailService : sendAllEmails(emailsToSend)
+            activate EmailService
+
+note right of EmailService
+All emails are sent through the FollowUpServer
+which is accessed through the Jobs4UProtocol
+end note
+                EmailService -> Jobs4UProtocol : sendEmail(toWho, subject, body)
+
+                activate Jobs4UProtocol
+
+alt return is ACK code
+
+        Jobs4UProtocol --> EmailService : successfull operation
+
+        EmailService --> NotifyCandidatesController : successfull operation
+
+        NotifyCandidatesController --> NotifyCandidatesUI : successfull operation
+
+        NotifyCandidatesUI --> CustomerManager : shows operation success
+
+else return is ERR code
+
+                    Jobs4UProtocol --> EmailService : could not send emails
+                deactivate Jobs4UProtocol
+
+                EmailService --> NotifyCandidatesController : could not send emails
+            deactivate EmailService
+
+            NotifyCandidatesController --> NotifyCandidatesUI : could not send emails
+        deactivate NotifyCandidatesController
+
+        NotifyCandidatesUI --> CustomerManager : shows operation error
+    deactivate NotifyCandidatesUI
+
+deactivate CustomerManager
+
+end alt
+
+@enduml

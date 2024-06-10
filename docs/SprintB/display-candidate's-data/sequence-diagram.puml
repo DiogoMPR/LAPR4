@@ -1,0 +1,94 @@
+@startuml
+skinparam monochrome true
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+autonumber
+
+'hide footbox
+actor "Customer Manager" as CM
+participant DisplaysCandidatesDataUI <<presentation>>
+participant DisplaysCandidatesDataController <<controller>>
+participant AuthorizationService <<service>>
+participant CandidateService <<service>>
+database CandidateRepository <<repository>>
+participant SystemUser <<systemUser>>
+
+
+activate CM
+
+        CM -> DisplaysCandidatesDataUI : asks a list of all candidates
+
+        activate DisplaysCandidatesDataUI
+
+        DisplaysCandidatesDataUI -> DisplaysCandidatesDataController : asks a list of all candidates
+
+        activate DisplaysCandidatesDataController
+
+        DisplaysCandidatesDataController -> AuthorizationService : ensureAuthenticatedUserHasAnyOf()
+
+        activate AuthorizationService
+
+        AuthorizationService --> DisplaysCandidatesDataController : return true
+
+        deactivate AuthorizationService
+
+        DisplaysCandidatesDataController -> CandidateService : allCandidates()
+
+        activate CandidateService
+
+        CandidateService -> CandidateRepository : allCandidates()
+
+        activate CandidateRepository
+
+        CandidateRepository --> CandidateService : listAllCandidates
+
+        deactivate CandidateRepository
+
+        CandidateService --> DisplaysCandidatesDataController : listAllCandidates
+
+        deactivate CandidateService
+
+        DisplaysCandidatesDataController --> DisplaysCandidatesDataUI : listAllCandidates
+
+        deactivate DisplaysCandidatesDataController
+
+        DisplaysCandidatesDataUI --> CM : show listAllCandidates and asks to select one candidate
+
+        deactivate DisplaysCandidatesDataUI
+
+        CM -> DisplaysCandidatesDataUI : select a candidate
+
+        activate DisplaysCandidatesDataUI
+
+    DisplaysCandidatesDataUI -> DisplaysCandidatesDataController : get all candidate's data
+
+        activate DisplaysCandidatesDataController
+
+         DisplaysCandidatesDataController -> SystemUser: user()
+
+         activate SystemUser
+
+         SystemUser --> DisplaysCandidatesDataController: all candidate's data
+
+        deactivate SystemUser
+
+        DisplaysCandidatesDataController --> DisplaysCandidatesDataUI : all candidate's data
+
+        deactivate DisplaysCandidatesDataController
+
+        DisplaysCandidatesDataUI --> CM : display all candidate's data
+
+        deactivate DisplaysCandidatesDataUI
+
+
+
+
+
+
+
+
+
+deactivate CM
+
+@enduml

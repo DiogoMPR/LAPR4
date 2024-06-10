@@ -1,0 +1,131 @@
+@startuml
+autonumber
+
+actor CustomerManager
+
+participant RankCandidatesUI <<presentation>>
+participant SelectJobOpeningController <<controller>>
+participant ListJobOpeningController <<controller>>
+participant RankCandidatesController <<controller>>
+
+participant ApplicationService <<service>>
+participant JobInterviewService <<service>>
+
+database JobOpeningRepository <<repository>>
+database ApplicationRepository <<repository>>
+database JobInterviewRepository <<repository>>
+
+activate CustomerManager
+
+    CustomerManager -> RankCandidatesUI : asks to rank candidates
+    activate RankCandidatesUI
+
+        RankCandidatesUI -> SelectJobOpeningController : selectJobOpeningAnalysis()
+        activate SelectJobOpeningController
+
+            SelectJobOpeningController -> ListJobOpeningController : showJobOpenings()
+            activate ListJobOpeningController
+
+                ListJobOpeningController --> SelectJobOpeningController : jobOpenings
+            deactivate ListJobOpeningController
+
+            SelectJobOpeningController --> RankCandidatesUI : jobOpenings
+        deactivate SelectJobOpeningController
+
+        RankCandidatesUI -> CustomerManager : lists job opening and asks to select one
+    deactivate RankCandidatesUI
+
+    CustomerManager -> RankCandidatesUI : selects job opening
+    activate RankCandidatesUI
+
+        RankCandidatesUI -> RankCandidatesController : findApplicationsForJobOpening(selectedJobOpening)
+        activate RankCandidatesController
+
+            RankCandidatesController -> ApplicationService : findByJobOpening(selectedJobOpening)
+            activate ApplicationService
+
+                ApplicationService -> ApplicationRepository : findByJobOpening(selectedJobOpening)
+                activate ApplicationRepository
+
+                    ApplicationRepository --> ApplicationService : applications
+                deactivate ApplicationRepository
+
+                ApplicationService --> RankCandidatesController : applications
+            deactivate ApplicationService
+
+            RankCandidatesController --> RankCandidatesUI : applications
+        deactivate RankCandidatesController
+
+alt rankOnlyNonRanked config is set to true
+        RankCandidatesUI -> RankCandidatesController : filterByNonRankedApplications(applications)
+        activate RankCandidatesController
+
+            RankCandidatesController --> RankCandidatesUI : filteredApplications
+        deactivate RankCandidatesController
+end alt
+
+loop while ranking all applications
+
+        RankCandidatesUI -> RankCandidatesController : findLastJobInterview(currentApplication)
+        activate RankCandidatesController
+            note right of RankCandidatesController
+            The application might not have interviews but the customer manager can still rank it.
+            end note
+
+            RankCandidatesController -> JobInterviewService : findByApplication(currentApplication)
+            activate JobInterviewService
+
+                JobInterviewService -> JobInterviewRepository : findByApplication(currentApplication)
+                activate JobInterviewRepository
+
+                    JobInterviewRepository --> JobInterviewService : interview
+                deactivate JobInterviewRepository
+
+                JobInterviewService --> RankCandidatesController : interview
+            deactivate JobInterviewService
+
+            RankCandidatesController --> RankCandidatesUI : interview
+        deactivate RankCandidatesController
+
+        RankCandidatesUI --> CustomerManager : shows interview score for the current \napplication and asks to rank it
+    deactivate RankCandidatesUI
+
+    CustomerManager -> RankCandidatesUI : ranks the application
+    activate RankCandidatesUI
+
+note right of RankCandidatesUI
+If the return is true, the user will be prompted to insert another rank.
+end note
+
+        RankCandidatesUI -> RankCandidatesController : isRankAlreadyAssigned(rank)
+        activate RankCandidatesController
+
+            RankCandidatesController --> RankCandidatesUI : returns false
+        deactivate RankCandidatesController
+
+        RankCandidatesUI -> RankCandidatesController : updateRank(rank, selectedApplication)
+        activate RankCandidatesController
+
+            RankCandidatesController -> ApplicationService : save(selectedApplication)
+            activate ApplicationService
+
+                ApplicationService -> ApplicationRepository : save(selectedApplication)
+                activate ApplicationRepository
+
+                    ApplicationRepository --> ApplicationService : successful operation
+                deactivate ApplicationRepository
+
+                ApplicationService --> RankCandidatesController : successful operation
+            deactivate ApplicationService
+
+            RankCandidatesController --> RankCandidatesUI : successful operation
+        deactivate RankCandidatesController
+
+        RankCandidatesUI --> CustomerManager : shows success message
+    deactivate RankCandidatesUI
+
+end loop
+
+deactivate CustomerManager
+
+@enduml

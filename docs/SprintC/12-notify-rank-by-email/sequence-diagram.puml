@@ -1,0 +1,249 @@
+@startuml
+autonumber
+
+actor CustomerManager
+
+participant NotifyResultOfRankCandidatesUI <<presentation>>
+
+participant NotifyResultOfRankCandidatesController <<controller>>
+participant NotifyCandidatesController <<controller>>
+participant ListJobOpeningApplicationsController <<controller>>
+participant SelectJobOpeningController <<controller>>
+participant ListJobOpeningController <<controller>>
+
+participant ApplicationService <<service>>
+participant EmailService <<service>>
+participant JobOpeningService <<service>>
+
+database ApplicationRepository <<repository>>
+database JobOpeningRepository <<repository>>
+
+
+participant Jobs4UProtocol <<protocol>>
+
+activate CustomerManager
+
+        CustomerManager -> NotifyResultOfRankCandidatesUI : asks to notify the result of selection
+            activate NotifyResultOfRankCandidatesUI
+        
+                NotifyResultOfRankCandidatesUI -> NotifyResultOfRankCandidatesController : selectJobOpening()
+                activate NotifyResultOfRankCandidatesController
+        
+                    NotifyResultOfRankCandidatesController -> SelectJobOpeningController : selectJobOpening()
+                    activate SelectJobOpeningController
+        
+                        SelectJobOpeningController -> ListJobOpeningController : showJobOpenings()
+                        activate ListJobOpeningController
+        
+                            ListJobOpeningController -> JobOpeningService : allJobOpenings()
+                            activate JobOpeningService
+        
+                                JobOpeningService -> JobOpeningRepository : findAll()
+                                activate JobOpeningRepository
+        
+                                    JobOpeningRepository --> JobOpeningService : Iterable<JobOpening> jobOpenings
+                                deactivate JobOpeningRepository
+        
+                                JobOpeningService --> ListJobOpeningController : Iterable<JobOpening> jobOpenings
+                            deactivate JobOpeningService
+        
+                            ListJobOpeningController --> SelectJobOpeningController : Iterable<JobOpening> jobOpenings
+                        deactivate ListJobOpeningController
+        
+                        SelectJobOpeningController -> SelectJobOpeningController : selectorPart(List<JobOpening> list)
+                        activate SelectJobOpeningController
+        
+                            SelectJobOpeningController -> ListJobOpeningController : findJobOpeningByJobReference(jobReference)
+                            activate ListJobOpeningController
+        
+                                ListJobOpeningController -> JobOpeningService : findJobOpening(jobReference)
+                                activate JobOpeningService
+        
+                                    JobOpeningService -> JobOpeningRepository : findAll()
+                                    activate JobOpeningRepository
+        
+                                        JobOpeningRepository --> JobOpeningService : Iterable<JobOpening> jobOpenings
+                                    deactivate JobOpeningRepository
+        
+                                    JobOpeningService --> ListJobOpeningController : job opening
+                                deactivate JobOpeningService
+        
+                                ListJobOpeningController --> SelectJobOpeningController : job opening
+                            deactivate ListJobOpeningController
+                        deactivate SelectJobOpeningController
+        
+                        SelectJobOpeningController --> NotifyResultOfRankCandidatesController : job opening
+                    deactivate SelectJobOpeningController
+        
+                    NotifyResultOfRankCandidatesController --> NotifyResultOfRankCandidatesUI : job opening
+                deactivate NotifyResultOfRankCandidatesController
+        
+                NotifyResultOfRankCandidatesUI --> CustomerManager : lists job opening and asks to select one
+
+                deactivate NotifyResultOfRankCandidatesUI
+
+                CustomerManager -> NotifyResultOfRankCandidatesUI : selects a job opening
+
+                activate NotifyResultOfRankCandidatesUI
+
+                NotifyResultOfRankCandidatesUI -> NotifyResultOfRankCandidatesController : allApplicationsOfJobOpeningAccepted(jobReference)
+
+                activate NotifyResultOfRankCandidatesController
+
+                NotifyResultOfRankCandidatesController -> ListJobOpeningApplicationsController : allApplicationsOfJobOpeningAccepted(jobReference)
+
+                activate ListJobOpeningApplicationsController
+
+                ListJobOpeningApplicationsController -> ApplicationService: allApplications()
+
+                activate ApplicationService
+
+                ApplicationService -> ApplicationRepository : allApplications()
+
+                activate ApplicationRepository
+
+                ApplicationRepository --> ApplicationService : list of all applications
+
+                deactivate ApplicationRepository
+
+
+                ApplicationService --> ListJobOpeningApplicationsController: list of all applications
+
+
+                deactivate ApplicationService
+
+loop if same jobReference, accepted status and rank < vacancies number
+
+                ListJobOpeningApplicationsController -> ApplicationService : updateStatus(Status.CHOSEN , application);
+
+                activate ApplicationService
+
+                ApplicationService --> ListJobOpeningApplicationsController : return true
+
+                deactivate ApplicationService
+
+end
+
+                deactivate ApplicationService
+
+                ListJobOpeningApplicationsController --> NotifyResultOfRankCandidatesController : list of applications chosen of the selected job opening
+
+                deactivate ListJobOpeningApplicationsController
+
+
+                NotifyResultOfRankCandidatesController --> NotifyResultOfRankCandidatesUI : list of applications chosen of the selected job opening
+
+                    deactivate NotifyResultOfRankCandidatesController
+
+loop for each candidate and email
+
+                NotifyResultOfRankCandidatesUI -> NotifyResultOfRankCandidatesController: findCandidateEmail(application)
+
+                activate NotifyResultOfRankCandidatesController
+
+                NotifyResultOfRankCandidatesController -> NotifyCandidatesController : findCandidateEmail(application)
+                activate NotifyCandidatesController
+
+                NotifyCandidatesController --> NotifyResultOfRankCandidatesController : candidateEmail
+
+                deactivate NotifyCandidatesController
+
+                NotifyResultOfRankCandidatesController --> NotifyResultOfRankCandidatesUI : candidateEmail
+
+                deactivate NotifyResultOfRankCandidatesController
+
+                NotifyResultOfRankCandidatesUI -> NotifyResultOfRankCandidatesController : createEmail(candidateEmail, subject, body)
+
+                activate NotifyResultOfRankCandidatesController
+
+                NotifyResultOfRankCandidatesController -> NotifyCandidatesController : createEmail(candidateEmail, subject, body)
+                activate NotifyCandidatesController
+
+                NotifyCandidatesController -> EmailService : createEmail(candidateEmail, subject, body)
+                activate EmailService
+
+                EmailService --> NotifyCandidatesController : email
+                deactivate EmailService
+
+                NotifyCandidatesController --> NotifyResultOfRankCandidatesController : email
+
+                deactivate NotifyCandidatesController
+
+                NotifyResultOfRankCandidatesController --> NotifyResultOfRankCandidatesUI: email
+
+                deactivate NotifyResultOfRankCandidatesController
+
+end loop
+
+NotifyResultOfRankCandidatesUI -> NotifyResultOfRankCandidatesController: sendEmails(emailsToSend)
+
+activate NotifyResultOfRankCandidatesController
+
+NotifyResultOfRankCandidatesController -> NotifyCandidatesController : sendEmails(emailsToSend)
+        activate NotifyCandidatesController
+
+            NotifyCandidatesController -> EmailService : sendAllEmails(emailsToSend)
+            activate EmailService
+
+note right of EmailService
+All emails are sent through the FollowUpServer
+which is accessed through the Jobs4UProtocol
+end note
+                EmailService -> Jobs4UProtocol : sendEmail(toWho, subject, body)
+
+                                               activate Jobs4UProtocol
+
+
+                NotifyResultOfRankCandidatesUI -> NotifyResultOfRankCandidatesController : sendEmailCostumer(emailcostumer)
+
+
+                NotifyResultOfRankCandidatesController -> NotifyCandidatesController : sendEmailCostumer(emailcostumer)
+
+                            NotifyCandidatesController -> EmailService : sendEmailCostumer(emailcostumer)
+
+                note right of EmailService
+                All emails are sent through the FollowUpServer
+                which is accessed through the Jobs4UProtocol
+                end note
+                                EmailService -> Jobs4UProtocol : sendEmail(toWho, subject, body)
+
+
+alt return is ACK code
+
+        Jobs4UProtocol --> EmailService : successfull operation
+
+        EmailService --> NotifyCandidatesController :  successfull operation
+
+        NotifyCandidatesController --> NotifyResultOfRankCandidatesController : successfull operation
+
+        NotifyResultOfRankCandidatesController --> NotifyResultOfRankCandidatesUI : successfull operation
+
+        NotifyResultOfRankCandidatesUI --> CustomerManager : shows operation success
+
+else return is ERR code
+
+                    Jobs4UProtocol --> EmailService : could not send emails
+                deactivate Jobs4UProtocol
+
+                EmailService --> NotifyCandidatesController : could not send emails
+            deactivate EmailService
+
+            NotifyCandidatesController --> NotifyResultOfRankCandidatesController : could not send emails
+
+            deactivate NotifyCandidatesController
+
+            NotifyResultOfRankCandidatesController --> NotifyResultOfRankCandidatesUI : could not send emails
+
+        NotifyResultOfRankCandidatesUI --> CustomerManager : shows operation error
+    deactivate NotifyResultOfRankCandidatesUI
+
+end alt
+
+
+
+
+
+
+
+
+@enduml

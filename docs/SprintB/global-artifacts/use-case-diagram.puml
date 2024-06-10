@@ -1,0 +1,66 @@
+@startuml
+'skinparam monochrome true
+skinparam packageStyle rectangle
+'skinparam shadowing false
+
+skinparam rectangle{
+    BorderColor black
+}
+
+left to right direction
+
+actor "Admin" as admin
+actor "Operator" as operator
+actor "Customer Manager" as customerManager
+actor "Language Engineer" as languageEngineer
+actor "Product Owner" as productOwner
+
+title "Use Case Diagram"
+
+rectangle "System" as backoffice {
+
+    usecase "register user of the backoffice"
+    usecase "disable user of the backoffice"
+    usecase "enable user of the backoffice"
+    usecase "list users of the backoffice"
+    usecase "register a customer"
+    usecase "register a job opening"
+    usecase "register a candidate"
+    usecase "register an application"
+    usecase "list all applications for a job opening"
+    usecase "display all the personal data of a candidate"
+    usecase "deploy and configure a plugin"
+    usecase "select the requirements specifications to be used for a job opening"
+    usecase "select the interview model to use for the interviews of a job opening"
+    usecase "generate and export a template text file to help collect the candidate answers during the interviews"
+    usecase "generate and export a template text file to help collect data fields for candidates of a job opening "
+    usecase "support and apply authentication and authorization for all its users and functionalities"
+    usecase "process the files produced by the Applications Email Bot, so that they can be imported into the system by initiative of the Operator"
+
+    admin --> "register user of the backoffice"
+    admin --> "disable user of the backoffice"
+    admin --> "enable user of the backoffice"
+    admin --> "list users of the backoffice"
+
+    customerManager --> "register a customer"
+        customerManager --> "register a job opening"
+        customerManager --> "list all applications for a job opening"
+        customerManager --> "display all the personal data of a candidate"
+        customerManager --> "select the requirements specifications to be used for a job opening"
+        customerManager --> "select the interview model to use for the interviews of a job opening"
+        customerManager --> "generate and export a template text file to help collect the candidate answers during the interviews"
+
+    operator --> "register a candidate"
+    operator --> "register an application"
+    operator --> "generate and export a template text file to help collect data fields for candidates of a job opening "
+
+    languageEngineer --> "deploy and configure a plugin"
+
+    productOwner --> "support and apply authentication and authorization for all its users and functionalities"
+    productOwner --> "process the files produced by the Applications Email Bot, so that they can be imported into the system by initiative of the Operator"
+
+
+}
+
+
+@enduml

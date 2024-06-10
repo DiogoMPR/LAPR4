@@ -1,0 +1,39 @@
+@startuml
+autonumber
+
+actor Candidate
+
+participant ListCandidateApplicationsUI <<presentation>>
+participant ListCandidateApplicationsController <<controller>>
+participant CandidateApplicationsService <<service>>
+participant Jobs4UProtocol <<protocol>>
+
+activate Candidate
+
+    Candidate -> ListCandidateApplicationsUI : asks to list all applications of candidate
+    activate ListCandidateApplicationsUI
+
+        ListCandidateApplicationsUI -> ListCandidateApplicationsController : sendApplicationsRequest(email)
+        activate ListCandidateApplicationsController
+
+            ListCandidateApplicationsController -> CandidateApplicationsService : requestApplications(email)
+            activate CandidateApplicationsService
+
+                CandidateApplicationsService -> Jobs4UProtocol : sendApplications(email)
+                activate Jobs4UProtocol
+
+                    Jobs4UProtocol --> CandidateApplicationsService : list of all applications of a candidate
+                deactivate Jobs4UProtocol
+
+                CandidateApplicationsService --> ListCandidateApplicationsController: list of all applications of a candidate
+            deactivate CandidateApplicationsService
+
+            ListCandidateApplicationsController --> ListCandidateApplicationsUI : List<Application> applications
+        deactivate ListCandidateApplicationsController
+
+        ListCandidateApplicationsUI --> Candidate :lists all applications of candidate \n and displays operation success
+    deactivate ListCandidateApplicationsUI
+
+deactivate Candidate
+
+@enduml
